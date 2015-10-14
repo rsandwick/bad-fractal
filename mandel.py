@@ -36,8 +36,8 @@ def mandel(n, m, xmin, xmax, ymin, ymax):
     iy.shape = n * m
     c.shape = n * m
     z = numpy.copy(c)
-    prev_color = pygame.Color(128, 0, 0)
-    for i, color in enumerate(colors):
+    prev_color = colors[0]
+    for color in colors:
         if not len(z):
             break
         numpy.multiply(z, z, z)
@@ -93,12 +93,12 @@ class MandelbrotFrame(tk.Frame):
         ratio = self.width / float(self.height)
         center, zoom = self.center, self.zoom
         self._cancel_event.clear()
-        for tex in mandel(
+        for i, tex in enumerate(mandel(
                 self.width, self.height,
                 center.x - (ratio * zoom),
                 center.x + (ratio * zoom),
                 center.y - zoom,
-                center.y + zoom):
+                center.y + zoom), start=1):
             try:
                 pygame.surfarray.blit_array(self.screen, tex)
                 self.showtext(
@@ -109,7 +109,8 @@ class MandelbrotFrame(tk.Frame):
                 self.showtext(
                         12, 8, "x=%g y=%g zoom=%g", center.x, center.y, zoom)
             self.showtext(
-                12, self.height - 32, "render=%.3fs", time.time() - start)
+                    12, self.height - 32, "render=%.3fs iteration=%d",
+                    time.time() - start, i)
             pygame.display.flip()
             if self._cancel_event.is_set():
                 break
