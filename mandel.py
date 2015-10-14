@@ -22,11 +22,6 @@ def rgb_ramp():
 
 colors = list(rgb_ramp())
 
-class Point(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
 def mandel(n, m, xmin, xmax, ymin, ymax):
     ix, iy = numpy.mgrid[0:n, 0:m]
     c = (numpy.linspace(xmin, xmax, n, dtype=numpy.float64)[ix] +
@@ -64,8 +59,9 @@ def mandel(n, m, xmin, xmax, ymin, ymax):
 class MandelbrotFrame(tk.Frame):
 
     screen = None
+    x = -.75
+    y = 0.
     zoom = 1.
-    center = Point(-.75, 0.)
 
     def __init__(self, master=None, height=400, width=400, **kwargs):
         self.height = height
@@ -91,23 +87,21 @@ class MandelbrotFrame(tk.Frame):
     def draw(self):
         start = time.time()
         ratio = self.width / float(self.height)
-        center, zoom = self.center, self.zoom
+        x, y, zoom = self.x, self.y, self.zoom
         self._cancel_event.clear()
         for i, tex in enumerate(mandel(
                 self.width, self.height,
-                center.x - (ratio * zoom),
-                center.x + (ratio * zoom),
-                center.y - zoom,
-                center.y + zoom), start=1):
+                x - (ratio * zoom), x + (ratio * zoom),
+                y - zoom, y + zoom), start=1):
             try:
                 pygame.surfarray.blit_array(self.screen, tex)
                 self.showtext(
-                        12, 8, "x=%g y=%g zoom=%g", center.x, center.y, zoom)
+                        12, 8, "x=%g y=%g zoom=%g", x, y, zoom)
             except TypeError:
                 self._set_mode()
                 pygame.surfarray.blit_array(self.screen, tex)
                 self.showtext(
-                        12, 8, "x=%g y=%g zoom=%g", center.x, center.y, zoom)
+                        12, 8, "x=%g y=%g zoom=%g", x, y, zoom)
             self.showtext(
                     12, self.height - 32, "render=%.3fs iteration=%d",
                     time.time() - start, i)
@@ -126,19 +120,19 @@ class MandelbrotFrame(tk.Frame):
         self.draw()
     def move_left(self, event):
         self._cancel_event.set()
-        self.center.x -= (self.width / float(self.height)) * self.zoom / 8.
+        self.x -= (self.width / float(self.height)) * self.zoom / 8.
         self.draw()
     def move_right(self, event):
         self._cancel_event.set()
-        self.center.x += (self.width / float(self.height)) * self.zoom / 8.
+        self.x += (self.width / float(self.height)) * self.zoom / 8.
         self.draw()
     def move_up(self, event):
         self._cancel_event.set()
-        self.center.y -= self.zoom / 8.
+        self.y -= self.zoom / 8.
         self.draw()
     def move_down(self, event):
         self._cancel_event.set()
-        self.center.y += self.zoom / 8.
+        self.y += self.zoom / 8.
         self.draw()
 
 def main():
