@@ -6,19 +6,15 @@ import pygame
 import threading
 import time
 
-MAX_ITERATIONS = 100
-
-def rgb_ramp():
-    for i in xrange(MAX_ITERATIONS):
+def rgb_ramp(stops=255):
+    for i in xrange(stops):
         rgb = colorsys.hsv_to_rgb(
-                i / (1. * MAX_ITERATIONS),
-                1., 0.5 + (i / (2. * MAX_ITERATIONS)))
-        #rgb = colorsys.hls_to_rgb(
-        #        0.66667 - (i / (2. * MAX_ITERATIONS)),
-        #        0.25 + (0.75 * i / (1. * MAX_ITERATIONS)), 1.)
+                i / (1. * stops),
+                1.,
+                0.5 + (i / (2. * stops)))
         yield pygame.Color(*(int(x * 255) for x in rgb))
 
-colors = list(rgb_ramp())
+colors = list(rgb_ramp(stops=100))
 
 def mandel(n, m, xmin, xmax, ymin, ymax):
     ix, iy = numpy.mgrid[0:n, 0:m]
