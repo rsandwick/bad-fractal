@@ -1,4 +1,3 @@
-import collections
 import colorsys
 import logging
 import numpy
@@ -6,7 +5,6 @@ import os
 import pygame
 import threading
 import time
-import Tkinter as tk
 
 MAX_ITERATIONS = 100
 
@@ -56,7 +54,7 @@ def mandel(n, m, xmin, xmax, ymin, ymax):
         iy = iy[rem]
         c = c[rem]
 
-class MandelbrotFrame(tk.Frame):
+class MandelbrotViewer(object):
 
     screen = None
     x = -.75
@@ -68,9 +66,6 @@ class MandelbrotFrame(tk.Frame):
         self.width = width
         self.font = pygame.font.SysFont("Segoe UI", 16, bold=True)
         self._cancel_event = threading.Event()
-        tk.Frame.__init__(
-                self, master=master, height=height, width=width, **kwargs)
-        self.bind("<Configure>", self.on_resize)
 
     def _set_mode(self):
         self.screen = pygame.display.set_mode(
@@ -95,42 +90,39 @@ class MandelbrotFrame(tk.Frame):
                 y - zoom, y + zoom), start=1):
             try:
                 pygame.surfarray.blit_array(self.screen, tex)
-                self.showtext(
-                        12, 8, "x=%g y=%g zoom=%g", x, y, zoom)
+                self.showtext(12, 8, "x=%g y=%g zoom=%g", x, y, zoom)
             except TypeError:
                 self._set_mode()
                 pygame.surfarray.blit_array(self.screen, tex)
-                self.showtext(
-                        12, 8, "x=%g y=%g zoom=%g", x, y, zoom)
+                self.showtext(12, 8, "x=%g y=%g zoom=%g", x, y, zoom)
             self.showtext(
                     12, self.height - 32, "render=%.3fs iteration=%d",
                     time.time() - start, i)
             pygame.display.flip()
             if self._cancel_event.is_set():
                 break
-        self.master.update()
 
-    def zoom_in(self, event):
+    def zoom_in(self):
         self._cancel_event.set()
         self.zoom /= 2.
         self.draw()
-    def zoom_out(self, event):
+    def zoom_out(self):
         self._cancel_event.set()
         self.zoom *= 2.
         self.draw()
-    def move_left(self, event):
+    def move_left(self):
         self._cancel_event.set()
         self.x -= (self.width / float(self.height)) * self.zoom / 8.
         self.draw()
-    def move_right(self, event):
+    def move_right(self):
         self._cancel_event.set()
         self.x += (self.width / float(self.height)) * self.zoom / 8.
         self.draw()
-    def move_up(self, event):
+    def move_up(self):
         self._cancel_event.set()
         self.y -= self.zoom / 8.
         self.draw()
-    def move_down(self, event):
+    def move_down(self):
         self._cancel_event.set()
         self.y += self.zoom / 8.
         self.draw()
@@ -139,26 +131,37 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("mandel")
 
+    #os.environ["SDL_VIDEODRIVER"] = "windib"
+    os.environ["SDL_VIDEODRIVER"] = "directx"
+
+    pygame.display.init()
+    pygame.display.set_caption("badass f-ing fractal")
     pygame.font.init()
 
-    root = tk.Tk()
-    root.title("badass f-ing fractal")
-    embed = MandelbrotFrame(root, width=800, height=600)
-    embed.grid(column=0, row=0, sticky=(tk.N + tk.S + tk.E + tk.W))
-    embed.pack()
+    viewer = MandelbrotViewer(width=800, height=600)
+    viewer.draw()
 
-    root.bind("<Left>", embed.move_left)
-    root.bind("<Right>", embed.move_right)
-    root.bind("<Up>", embed.move_up)
-    root.bind("<Down>", embed.move_down)
-    root.bind("<plus>", embed.zoom_in)
-    root.bind("<minus>", embed.zoom_out)
-
-    os.environ["SDL_WINDOWID"] = str(embed.winfo_id())
-    os.environ["SDL_VIDEODRIVER"] = "windib"
-    #os.environ["SDL_VIDEODRIVER"] = "directx"
-
-    root.mainloop()
+    done = False
+    while not done:
+        for event in pygame.event.get():
+            logger.debug("%s", event)
+            if event.type == pygame.QUIT:
+                done = True
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP:
+                    viewer.move_up()
+                elif event.key == pygame.K_DOWN:
+                    viewer.move_down()
+                elif event.key == pygame.K_LEFT:
+                    viewer.move_left()
+                elif event.key == pygame.K_LEFT:
+                    viewer.move_right()
+                elif event.key == pygame.K_PAGEUP:
+                    viewer.zoom_in()
+                elif event.key == pygame.K_PAGEDOWN:
+                    viewer.zoom_out()
+                elif event.key == pygame.K_ESCAPE:
+                    done = True
 
 if __name__ == "__main__":
     main()
